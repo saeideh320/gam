@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>بازی آموزشی ضرب - پایه سوم</title>
+  <style>
+    :root{
+      --bg1:#08121f;
+      --bg2:#0f2742;
+      --card:#ffffff14;
+      --card2:#ffffff1e;
+      --text:#ffffff;
+      --muted:#d8e8ff;
+      --accent:#44d7ff;
+      --accent2:#7cff8f;
+      --warn:#ffce5c;
+      --danger:#ff6b8b;
+      --shadow:0 12px 30px rgba(0,0,0,.28);
+      --radius:24px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      font-family: Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(68,215,255,.18), transparent 28%),
+        radial-gradient(circle at 20% 20%, rgba(124,255,143,.14), transparent 18%),
+        linear-gradient(160deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    body::before, body::after{
+      content:"";
+      position:fixed;
+      inset:auto;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:0;
+      filter: blur(1px);
+      opacity:.7;
+      animation: float 8s ease-in-out infinite;
+    }
+    body::before{
+      width:120px;height:120px;left:-25px;top:20%;
+      background: radial-gradient(circle, rgba(68,215,255,.25), transparent 68%);
+    }
+    body::after{
+      width:160px;height:160px;right:-40px;bottom:12%;
+      background: radial-gradient(circle, rgba(255,206,92,.18), transparent 68%);
+      animation-delay:-4s;
+    }
+
+    @keyframes float{
+      0%,100%{transform:translateY(0px) translateX(0px)}
+      50%{transform:translateY(-18px) translateX(8px)}
+    }
+
+    .stars{
+      position:fixed;
+      inset:0;
+      overflow:hidden;
+      pointer-events:none;
+      z-index:0;
+    }
+    .stars span{
+      position:absolute;
+      width:2px;height:2px;
+      background:#fff;
+      border-radius:50%;
+      opacity:.8;
+      animation: twinkle 3s infinite ease-in-out;
+    }
+    @keyframes twinkle{
+      0%,100%{transform:scale(1);opacity:.3}
+      50%{transform:scale(1.8);opacity:1}
+    }
+
+    .app{
+      position:relative;
+      z-index:1;
+      width:min(980px, 94vw);
+      margin:0 auto;
+      padding:18px 0 28px;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .screen{
+      width:100%;
+      display:none;
+      animation: fade .35s ease;
+    }
+    .screen.active{display:block}
+    @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.09));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border:1px solid rgba(255,255,255,.15);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: clamp(16px, 3vw, 28px);
+    }
+
+    .hero{
+      display:grid;
+      gap:16px;
+      align-items:center;
+      text-align:center;
+    }
+
+    .logo{
+      width:92px;height:92px;
+      margin:0 auto;
+      border-radius:28px;
+      display:grid;
+      place-items:center;
+      background: linear-gradient(145deg, rgba(68,215,255,.23), rgba(124,255,143,.18));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: inset 0 0 30px rgba(255,255,255,.08);
+      font-size:46px;
+      animation: rocket 2.8s ease-in-out infinite;
+    }
+    @keyframes rocket{
+      0%,100%{transform:translateY(0) rotate(-2deg)}
+      50%{transform:translateY(-8px) rotate(2deg)}
+    }
+
+    h1{
+      margin:0;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height:1.2;
+    }
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size: clamp(14px, 2.6vw, 18px);
+      line-height:1.8;
+    }
+
+    .meta{
+      display:grid;
+      gap:10px;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      margin-top:8px;
+    }
+    .chip{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      padding:12px 14px;
+      text-align:center;
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .form{
+      display:grid;
+      gap:12px;
+      margin-top:16px;
+    }
+    input{
+      width:100%;
+      border:none;
+      outline:none;
+      padding:16px 18px;
+      border-radius:18px;
+      background: rgba(255,255,255,.12);
+      color:var(--text);
+      font-size:16px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    input::placeholder{color:#dbe8ff99}
+
+    .btn{
+      border:none;
+      outline:none;
+      cursor:pointer;
+      padding:14px 18px;
+      border-radius:18px;
+      font-size:16px;
+      font-weight:700;
+      color:#08121f;
+      background: linear-gradient(135deg, var(--accent), #a7f7ff);
+      box-shadow: 0 10px 22px rgba(68,215,255,.25);
+      transition: transform .2s ease, filter .2s ease;
+      width:100%;
+    }
+    .btn:hover{transform:translateY(-1px); filter:brightness(1.02)}
+    .btn:active{transform:translateY(1px) scale(.99)}
+
+    .btn.secondary{
+      background: linear-gradient(135deg, #7cff8f, #d6ffb8);
+      box-shadow: 0 10px 22px rgba(124,255,143,.18);
+    }
+
+    .game-top{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:14px;
+    }
+
+    .player{
+      font-size:15px;
+      color:var(--muted);
+    }
+    .scorebox{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+    }
+    .mini{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:10px 12px;
+      font-size:14px;
+      color:var(--text);
+    }
+
+    .progress-wrap{
+      margin:12px 0 16px;
+      background: rgba(255,255,255,.10);
+      border-radius:999px;
+      height:14px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .progress{
+      width:0%;
+      height:100%;
+      border-radius:999px;
+      background: linear-gradient(90deg, var(--warn), var(--accent2));
+      transition: width .35s ease;
+    }
+
+    .question-card{
+      background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08));
+      border-radius: 26px;
+      padding: clamp(18px, 4vw, 26px);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .q-no{
+      display:inline-block;
+      margin-bottom:12px;
+      background: rgba(255,255,255,.12);
+      padding:8px 12px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .question{
+      margin:0 0 18px;
+      font-size: clamp(24px, 4vw, 34px);
+      line-height:1.6;
+      text-align:center;
+    }
+
+    .options{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+
+    .option{
+      border:none;
+      width:100%;
+      padding:16px 16px;
+      border-radius:18px;
+      font-size:18px;
+      cursor:pointer;
+      color:var(--text);
+      background: rgba(9, 21, 36, .65);
+      border:1px solid rgba(255,255,255,.12);
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+      text-align:center;
+    }
+    .option:hover{transform:translateY(-2px); background: rgba(255,255,255,.14)}
+    .option.correct{
+      background: rgba(124,255,143,.22);
+      border-color: rgba(124,255,143,.65);
+      animation: pop .3s ease;
+    }
+    .option.wrong{
+      background: rgba(255,107,139,.22);
+      border-color: rgba(255,107,139,.65);
+      animation: shake .35s ease;
+    }
+    @keyframes pop{0%{transform:scale(.96)}100%{transform:scale(1)}}
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-6px)}
+      50%{transform:translateX(6px)}
+      75%{transform:translateX(-4px)}
+    }
+
+    .feedback{
+      min-height:30px;
+      margin-top:14px;
+      text-align:center;
+      font-size:18px;
+      font-weight:700;
+    }
+    .feedback.ok{color:var(--accent2)}
+    .feedback.no{color:#ff9db0}
+
+    .end-grid{
+      display:grid;
+      gap:16px;
+      text-align:center;
+    }
+
+    .report{
+      display:grid;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    .report-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:16px;
+    }
+
+    .rank{
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight:800;
+      color: var(--warn);
+      margin: 6px 0 2px;
+    }
+
+    .small{
+      color: var(--muted);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    @media (min-width: 720px){
+      .options{grid-template-columns: 1fr 1fr}
+      .meta{grid-template-columns: repeat(4, minmax(0,1fr))}
+      .question{font-size: clamp(28px, 3vw, 38px)}
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="app">
+    <!-- START SCREEN -->
+    <section class="screen active" id="startScreen">
+      <div class="card hero">
+        <div class="logo">🚀</div>
+        <h1>بازی آموزشی ضرب</h1>
+        <p class="subtitle">
+          پایه سوم | درس ریاضی | موضوع: ضرب<br>
+          یک ماجراجویی فضایی جذاب برای تمرین ۵ سؤال چهارگزینه‌ای
+        </p>
+
+        <div class="meta">
+          <div class="chip">🎨 تم: سفر فضایی</div>
+          <div class="chip">📱 سازگار با موبایل</div>
+          <div class="chip">💻 سازگار با کامپیوتر</div>
+          <div class="chip">🔌 کاملاً آفلاین</div>
+        </div>
+
+        <div class="form">
+          <input id="studentName" type="text" placeholder="نام دانش‌آموز را وارد کنید" maxlength="30" />
+          <input id="designerName" type="text" placeholder="نام طراح" value="طراحی آموزشی هوشمند" maxlength="40" />
+          <button class="btn" id="startBtn">شروع بازی</button>
+        </div>
+
+        <p class="small">پاسخ درست امتیاز می‌گیرد و در پایان کارنامه کامل نمایش داده می‌شود.</p>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section class="screen" id="gameScreen">
+      <div class="card">
+        <div class="game-top">
+          <div class="player" id="playerLabel">دانش‌آموز: -</div>
+          <div class="scorebox">
+            <div class="mini">⭐ امتیاز: <span id="scoreEl">0</span></div>
+            <div class="mini">❓ سؤال <span id="qIndexEl">1</span> از 5</div>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress" id="progressBar"></div>
+        </div>
+
+        <div class="question-card">
+          <div class="q-no" id="qNo">سؤال 1</div>
+          <h2 class="question" id="questionText">...</h2>
+          <div class="options" id="options"></div>
+          <div class="feedback" id="feedback"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- END SCREEN -->
+    <section class="screen" id="endScreen">
+      <div class="card end-grid">
+        <div class="logo">🏆</div>
+        <h1>کارنامه نهایی</h1>
+        <p class="subtitle">آفرین! بازی به پایان رسید.</p>
+
+        <div class="report">
+          <div class="report-row"><span>نام دانش‌آموز</span><strong id="rName">-</strong></div>
+          <div class="report-row"><span>پاسخ صحیح</span><strong id="rCorrect">0</strong></div>
+          <div class="report-row"><span>پاسخ غلط</span><strong id="rWrong">0</strong></div>
+          <div class="report-row"><span>درصد موفقیت</span><strong id="rPercent">0%</strong></div>
+          <div class="report-row"><span>رتبه</span><strong id="rRank">-</strong></div>
+          <div class="report-row"><span>طراح</span><strong id="rDesigner">-</strong></div>
+        </div>
+
+        <div class="rank" id="finalMessage">—</div>
+        <button class="btn secondary" id="restartBtn">شروع مجدد</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const TOTAL = 5;
+    let questions = [];
+    let current = 0;
+    let score = 0;
+    let wrong = 0;
+    let locked = false;
+    let studentName = "";
+    let designerName = "";
+
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const endScreen = document.getElementById("endScreen");
+
+    const studentNameInput = document.getElementById("studentName");
+    const designerNameInput = document.getElementById("designerName");
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const playerLabel = document.getElementById("playerLabel");
+    const scoreEl = document.getElementById("scoreEl");
+    const qIndexEl = document.getElementById("qIndexEl");
+    const progressBar = document.getElementById("progressBar");
+    const qNo = document.getElementById("qNo");
+    const questionText = document.getElementById("questionText");
+    const optionsEl = document.getElementById("options");
+    const feedbackEl = document.getElementById("feedback");
+
+    const rName = document.getElementById("rName");
+    const rCorrect = document.getElementById("rCorrect");
+    const rWrong = document.getElementById("rWrong");
+    const rPercent = document.getElementById("rPercent");
+    const rRank = document.getElementById("rRank");
+    const rDesigner = document.getElementById("rDesigner");
+    const finalMessage = document.getElementById("finalMessage");
+
+    function createStars(){
+      const stars = document.getElementById("stars");
+      const count = 70;
+      for(let i=0;i<count;i++){
+        const s = document.createElement("span");
+        s.style.left = Math.random() * 100 + "%";
+        s.style.top = Math.random() * 100 + "%";
+        s.style.opacity = (Math.random() * .7 + .2).toFixed(2);
+        s.style.animationDelay = (Math.random() * 3).toFixed(2) + "s";
+        s.style.transform = `scale(${(Math.random() * 1.8 + .5).toFixed(2)})`;
+        stars.appendChild(s);
+      }
+    }
+
+    function randomInt(min, max){
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffle(arr){
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    function generateQuestions(){
+      questions = [];
+      const used = new Set();
+
+      while(questions.length < TOTAL){
+        let a = randomInt(2, 9);
+        let b = randomInt(2, 9);
+        let ans = a * b;
+        const key = `${a}x${b}`;
+        if(used.has(key)) continue;
+        used.add(key);
+
+        let options = new Set([ans]);
+        while(options.size < 4){
+          let delta = randomInt(-8, 8);
+          if(delta === 0) delta = 3;
+          let wrongOpt = ans + delta;
+          if(wrongOpt > 0) options.add(wrongOpt);
+        }
+
+        questions.push({
+          text: `${a} × ${b} = ؟`,
+          answer: ans,
+          options: shuffle([...options])
+        });
+      }
+    }
+
+    function showScreen(screen){
+      [startScreen, gameScreen, endScreen].forEach(s => s.classList.remove("active"));
+      screen.classList.add("active");
+    }
+
+    function startGame(){
+      studentName = studentNameInput.value.trim();
+      designerName = designerNameInput.value.trim() || "طراحی آموزشی هوشمند";
+
+      if(!studentName){
+        alert("لطفاً نام دانش‌آموز را وارد کنید.");
+        return;
+      }
+
+      score = 0;
+      wrong = 0;
+      current = 0;
+      locked = false;
+
+      generateQuestions();
+      playerLabel.textContent = `دانش‌آموز: ${studentName}`;
+      scoreEl.textContent = score;
+      showScreen(gameScreen);
+      renderQuestion();
+    }
+
+    function renderQuestion(){
+      locked = false;
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+
+      const q = questions[current];
+      qIndexEl.textContent = current + 1;
+      qNo.textContent = `سؤال ${current + 1}`;
+      questionText.textContent = q.text;
+      progressBar.style.width = `${(current / TOTAL) * 100}%`;
+
+      optionsEl.innerHTML = "";
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = opt;
+        btn.addEventListener("click", () => handleAnswer(btn, opt));
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(button, selected){
+      if(locked) return;
+      locked = true;
+
+      const q = questions[current];
+      const buttons = [...document.querySelectorAll(".option")];
+      buttons.forEach(b => b.disabled = true);
+
+      if(selected === q.answer){
+        score++;
+        scoreEl.textContent = score;
+        button.classList.add("correct");
+        feedbackEl.textContent = "آفرین! پاسخ درست بود ✅";
+        feedbackEl.classList.add("ok");
+      } else {
+        wrong++;
+        button.classList.add("wrong");
+        feedbackEl.textContent = `اشکال ندارد، پاسخ درست: ${q.answer} ❌`;
+        feedbackEl.classList.add("no");
+
+        buttons.forEach(b => {
+          if(Number(b.textContent) === q.answer){
+            b.classList.add("correct");
+          }
+        });
+      }
+
+      current++;
+      progressBar.style.width = `${(current / TOTAL) * 100}%`;
+
+      setTimeout(() => {
+        if(current < TOTAL){
+          renderQuestion();
+        } else {
+          finishGame();
+        }
+      }, 1200);
+    }
+
+    function getRank(percent){
+      if(percent === 100) return "استاد ضرب فضایی";
+      if(percent >= 80) return "قهرمان ریاضی";
+      if(percent >= 60) return "مسافر خوب";
+      if(percent >= 40) return "در حال پیشرفت";
+      return "نیازمند تمرین بیشتر";
+    }
+
+    function finishGame(){
+      const percent = Math.round((score / TOTAL) * 100);
+      const rank = getRank(percent);
+
+      rName.textContent = studentName;
+      rCorrect.textContent = score;
+      rWrong.textContent = wrong;
+      rPercent.textContent = percent + "%";
+      rRank.textContent = rank;
+      rDesigner.textContent = designerName;
+      finalMessage.textContent =
+        percent >= 80 ? "عالی بودی! خیلی خوب ضرب را یاد گرفتی 🚀" :
+        percent >= 60 ? "خوب بود! با کمی تمرین بهتر هم می‌شوی 🌟" :
+        "ناراحت نباش، فقط کمی تمرین بیشتر لازم داری 💪";
+
+      showScreen(endScreen);
+    }
+
+    startBtn.addEventListener("click", startGame);
+    restartBtn.addEventListener("click", () => {
+      showScreen(startScreen);
+      studentNameInput.focus();
+    });
+
+    studentNameInput.addEventListener("keydown", e => {
+      if(e.key === "Enter") startGame();
+    });
+
+    designerNameInput.addEventListener("keydown", e => {
+      if(e.key === "Enter") startGame();
+    });
+
+    createStars();
+  </script>
+</body>
+</html>
