@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>سرزمین تقریب‌ها | بازی آموزشی ریاضی</title>
+  <style>
+    :root{
+      --sky1:#ccefff;
+      --sky2:#e5f7ff;
+      --sky3:#fff7d6;
+      --panel: rgba(255, 255, 255, 0.52);
+      --ink:#1c3d5a;
+      --shadow: 0 15px 35px rgba(255, 180, 210, 0.25);
+      --radius: 28px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Tahoma, system-ui, -apple-system, sans-serif;
+      color:var(--ink);
+      background: linear-gradient(180deg,var(--sky1),var(--sky2),var(--sky3));
+      overflow:hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* انیمیشن پاپ‌آپ (بزرگ‌نمایی کشسان) */
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .animate-pop {
+      animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .sparkles{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255,255,255,.6) 0 1px, transparent 2px),
+        radial-gradient(circle at 45% 25%, rgba(255,255,255,.5) 0 1px, transparent 2px),
+        radial-gradient(circle at 75% 15%, rgba(255,255,255,.6) 0 1px, transparent 2px),
+        radial-gradient(circle at 85% 35%, rgba(255,255,255,.5) 0 1px, transparent 2px);
+      opacity:.4;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .sky-layer{ position:fixed; inset:0; pointer-events:none; z-index:1; }
+
+    .sun{
+      position:absolute;
+      top:20px; left:-240px;
+      font-size: 110px;
+      filter: drop-shadow(0 10px 15px rgba(255,180,0,.3));
+      animation: sunMove 20s linear infinite;
+    }
+    @keyframes sunMove{
+      from{ transform: translateX(0); }
+      to{ transform: translateX(130vw); }
+    }
+
+    .cloud{
+      position:absolute;
+      font-size: 80px;
+      opacity:.92;
+      filter: drop-shadow(0 8px 12px rgba(0,60,120,.08));
+      animation-name: cloudMove;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    .c1{ top:15px; right:-220px; animation-duration: 25s; }
+    .c2{ top:45px; right:-320px; animation-duration: 35s; opacity:.85; font-size:70px; }
+    .c3{ top:30px; right:-420px; animation-duration: 30s; opacity:.88; font-size:75px; }
+    @keyframes cloudMove{
+      to{ transform: translateX(-140vw); }
+    }
+
+    .butterfly-holder {
+      position: absolute;
+      top: 6%;
+      left: 45%;
+      width: 50px;
+      height: 50px;
+      z-index: 2;
+      animation: swirlMotion 18s ease-in-out infinite;
+    }
+
+    .butterfly{
+      font-size: 42px;
+      text-align: center;
+      line-height: 50px;
+      filter: drop-shadow(0 6px 10px rgba(255,100,180,.35)) hue-rotate(110deg) saturate(1.8) brightness(1.2);
+      animation: trueFlap .22s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+
+    @keyframes trueFlap {
+      0% { transform: scaleX(1) scaleY(1); }
+      100% { transform: scaleX(0.2) scaleY(0.95); }
+    }
+
+    @keyframes swirlMotion {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(120px, -40px) rotate(15deg) scale(1.1); }
+      40% { transform: translate(60px, 60px) rotate(45deg) scale(0.9); }
+      60% { transform: translate(-120px, -20px) rotate(-30deg) scale(1); }
+      80% { transform: translate(-60px, 80px) rotate(-15deg) scale(1.05); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    .app{
+      position:relative;
+      z-index:5;
+      height:100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 20px 16px 5vh;
+      transition: justify-content 0.3s ease;
+    }
+
+    .app.center-aligned {
+      justify-content: center;
+    }
+
+    .screen{
+      width:min(540px, 94vw);
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      border: 4px solid rgba(255, 255, 255, 0.7);
+      display:none;
+      position:relative;
+      overflow:hidden;
+      text-align: center;
+    }
+    .screen.active{ display:block; }
+
+    .adjust-margin {
+      margin-top: 135px;
+    }
+
+    .title{
+      margin: 0 0 10px;
+      font-size: clamp(22px, 4.2vw, 30px);
+      line-height:1.2;
+      color: #1f4068;
+      text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    .title-gold {
+      color: #800080 !important;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2), 0 0 10px rgba(255, 215, 0, 0.5) !important;
+      font-weight: 900;
+    }
+
+    .sub{
+      margin: 0 0 16px;
+      font-size: clamp(14px, 3.2vw, 16px);
+      opacity:.95;
+      line-height: 1.6;
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; }
+
+    input{
+      width:min(340px, 88%);
+      font-size: 18px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 3px solid rgba(135,206,250,0.5);
+      outline:none;
+      background: rgba(255,255,255,.9);
+      text-align:center;
+      color: var(--ink);
+    }
+    input:focus{ border-color: rgba(255,182,193,0.8); box-shadow: 0 0 0 5px rgba(255,192,203,.3); }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius: 18px;
+      padding: 12px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color:#fff;
+      background: linear-gradient(135deg,#ff9bb5,#ff5e7e);
+      box-shadow: 0 8px 16px rgba(255,94,126,.25);
+      transition: transform .12s ease, filter .12s ease;
+      font-family: inherit;
+    }
+    .btn:active{ transform: translateY(1px) scale(.98); filter:brightness(1.05); }
+
+    .btn-guide-main {
+      border: none;
+      cursor: pointer;
+      border-radius: 18px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #1c3d5a;
+      background: linear-gradient(135deg, #ffeb9c, #ffcc5c);
+      box-shadow: 0 8px 16px rgba(255, 204, 92, 0.35);
+      transition: transform .12s ease, filter .12s ease;
+      font-family: inherit;
+      margin-bottom: 12px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .btn-guide-main:active { transform: translateY(1px) scale(.98); }
+
+    .level-select {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px 0 20px;
+    }
+    .level-btn {
+      flex: 1;
+      border: 2px solid rgba(28, 61, 90, 0.15);
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 14px;
+      padding: 10px 5px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all 0.2s;
+    }
+    .level-btn.selected {
+      background: linear-gradient(135deg, #a8e6cf, #1abc9c);
+      color: white;
+      border-color: #1abc9c;
+      box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+      transform: scale(1.05);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      display: none;
+      place-items: center;
+      padding: 15px;
+    }
+    .modal.show { display: grid; }
+    .modal-content {
+      background: white;
+      border-radius: 24px;
+      width: min(480px, 95vw);
+      padding: 22px;
+      text-align: right;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      position: relative;
+      animation: pop 0.4s ease;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .designer{
+      margin-top: 14px;
+      font-size: 12px;
+      opacity:.85;
+      font-weight: bold;
+      line-height: 1.6;
+      border-top: 1px dashed rgba(28, 61, 90, 0.2);
+      padding-top: 10px;
+      text-align: center;
+    }
+
+    .hud{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      font-weight:700;
+      font-size: 14px;
+      margin-bottom:8px;
+    }
+
+    .timeWrap{
+      margin: 6px 0 12px;
+      background: rgba(0,0,0,.05);
+      border-radius: 999px;
+      height: 12px;
+      overflow:hidden;
+      border: 2px solid rgba(255,255,255,.5);
+    }
+    .timeBar{
+      height:100%;
+      width:100%;
+      background: linear-gradient(90deg,#8ce2ff,#ffa8cc,#ffd56b);
+      border-radius: 999px;
+      transition: width .12s linear;
+    }
+
+    .qText{
+      font-size: clamp(16px, 3.8vw, 19px);
+      font-weight: 900;
+      line-height: 1.6;
+      margin: 6px 0 14px;
+      min-height: 60px;
+      text-shadow: 0 1px 1px rgba(255,255,255,.8);
+    }
+
+    .options{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 460px){
+      .options{ grid-template-columns: 1fr; }
+    }
+
+    .opt{
+      border:none;
+      cursor:pointer;
+      border-radius: 16px;
+      padding: 12px 10px;
+      font-size: 18px;
+      font-weight: 900;
+      color:#1c3d5a;
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: 0 6px 12px rgba(0,0,0,.04);
+      transition: transform .12s ease, background-color 0.2s, color 0.2s;
+      border: 1px solid rgba(255,255,255,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+    .opt:active{ transform: scale(.98); }
+
+    .opt.correct-reveal {
+      background-color: #2ecc71 !important;
+      color: white !important;
+      font-weight: bold !important;
+      border-color: #27ae60 !important;
+      box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.4), 0 10px 18px rgba(46, 204, 113, 0.2) !important;
+      animation: correctBounce .42s ease forwards;
+    }
+
+    @keyframes correctBounce{
+      0%{ transform: scale(1) translateX(0); }
+      20%{ transform: scale(1.05) translateX(-3px); }
+      40%{ transform: scale(1.02) translateX(3px); }
+      60%{ transform: scale(1.04) translateY(-3px); }
+      80%{ transform: scale(1.01) translateX(-1.5px); }
+      100%{ transform: scale(1) translateX(0) translateY(0); }
+    }
+
+    .feedback{
+      margin-top: 14px;
+      min-height: 45px;
+      font-size: 26px;
+      font-weight: 1000;
+      text-align:center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    .burst-layer{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 45;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0;
+      will-change: transform, opacity;
+      animation: waterfall var(--dur) linear forwards;
+    }
+
+    @keyframes waterfall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sparkles"></div>
+
+  <div class="sky-layer" aria-hidden="true">
+    <div class="sun">🌞</div>
+    <div class="cloud c1">☁️</div>
+    <div class="cloud c2">☁️</div>
+    <div class="cloud c3">☁️</div>
+
+    <div class="butterfly-holder">
+      <div class="butterfly">🦋</div>
+    </div>
+  </div>
+
+  <div class="burst-layer" id="burstLayer"></div>
+
+  <div class="modal" id="guideModal">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:#1f4068; border-bottom:2px solid #ffcc5c; padding-bottom:8px;">💡 یادآوری سریع روش‌های تقریب</h3>
+      <p><b>✂️ روش قطع کردن:</b> تمام رقم‌های بعد از مرتبه تقریب را صفر می‌کنیم. (بدون هیچ تغییری در خود مرتبه)</p>
+      <p style="font-size:13px; color:#555; padding-right:12px; border-right:3px solid #ff9bb5;">مثال: تقریب قطع کردن عدد ۱۴/۶۷ تا مرتبه یکان می‌شود: ۱۴/۰۰ (یا همان ۱۴)</p>
+      
+      <p><b>⭕ روش گرد کردن:</b> به اولین رقم بعد از مرتبه نگاه می‌کنیم. اگر ۵ یا بیشتر بود، به مرتبه تقریب یک واحد اضافه می‌کنیم و رقم‌های بعد را صفر می‌کنیم. اگر کمتر از ۵ بود، بدون تغییر، بقیه را صفر می‌کنیم.</p>
+      <p style="font-size:13px; color:#555; padding-right:12px; border-right:3px solid #ff9bb5;">مثال: تقریب گرد کردن عدد ۱۴/۶۷ تا مرتبه یکان می‌شود: ۱۵/۰۰ (چون ۶ از ۵ بزرگ‌تر است)</p>
+      
+      <button class="btn" id="btnCloseGuide" style="width:100%; margin-top:12px; padding:10px;">فهمیدم! بازگشت به بازی</button>
+    </div>
+  </div>
+
+  <main class="app center-aligned" id="mainApp">
+    <section class="screen active" id="s1">
+      <h1 class="title title-gold animate-pop">سلام قهرمان ریاضی! ⭐️🏆</h1>
+      <p class="sub">نام قشنگت رو این‌جا بنویس تا با هم بازی کنیم:</p>
+      <div class="row">
+        <input id="nameInput" inputmode="text" autocomplete="off" placeholder="نام تو..." />
+      </div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn" id="btnReady">آماده‌ام! بزن بریم 😍</button>
+      </div>
+      <div class="designer">طراح: سعیده حسین زاده _ کدملی: ۲۵۷۱۷۷۱۴۰۱<br>شماره پرسنلی: ۲۳۰۲۳۵۵۷ _ استان: فارس _ شهرستان فسا<br>شماره تماس: ۰۹۱۷۳۳۰۵۴۸۹</div>
+    </section>
+
+    <section class="screen adjust-margin" id="s2">
+      <h1 class="title">به سرزمین تقریب‌ها خوش آمدی 🌈</h1>
+      <p class="sub">توی این بازی ۱۰ تا سؤال ریاضی داری. هر سؤال هم <b>۲۰ ثانیه</b> وقت داره! گزینه‌ی درست رو پیدا کن.</p>
+      
+      <div style="margin-bottom: 15px;">
+        <button class="btn-guide-main" id="btnOpenGuide">💡 یادآوری سریع درس (فرمول تقریب)</button>
+      </div>
+
+      <div style="font-weight:bold; margin-bottom:5px;">سطح بازی را انتخاب کن:</div>
+      <div class="level-select">
+        <button class="level-btn selected" data-level="easy">🟢 آسان</button>
+        <button class="level-btn" data-level="mid">🟡 متوسط</button>
+        <button class="level-btn" data-level="hard">🔴 سخت</button>
+      </div>
+
+      <button class="btn" id="btnStart">بزن تا شروع کنیم 😍</button>
+    </section>
+
+    <section class="screen" id="s3">
+      <div class="hud">
+        <div id="hudQ">سؤال ۱ از ۱۰</div>
+        <div id="hudTime">زمان: ۲۰</div>
+      </div>
+
+      <div class="timeWrap" aria-label="نوار زمان">
+        <div class="timeBar" id="timeBar"></div>
+      </div>
+
+      <div class="qText" id="qText"></div>
+
+      <div class="options" id="options"></div>
+
+      <div class="feedback" id="feedback"></div>
+    </section>
+
+    <section class="screen adjust-margin" id="s4">
+      <h1 class="title animate-pop">کارنامه قشنگ تو 🎉</h1>
+      <div class="sub" id="report" style="white-space: pre-line; line-height: 1.8; font-weight: bold; font-size: 16px;"></div>
+      <button class="btn" id="btnRestart" style="margin-top: 10px;">دوباره بازی کنیم؟ 🔄</button>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const digitsFa = '۰۱۲۳۴۵۶۷۸۹';
+  const toFa = (x) => String(x)
+    .replaceAll('.', '/')
+    .replace(/\d/g, d => digitsFa[d]);
+
+  const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const choice = (arr) => arr[Math.floor(Math.random()*arr.length)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const hslPastel = () => `hsl(${Math.floor(Math.random()*360)}, 90%, 88%)`;
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playClickSound() {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    } catch(e) {}
+  }
+
+  function playSuccessSound() {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+      osc.frequency.exponentialRampToTimeConstant(659.25, audioCtx.currentTime + 0.1, 0.1);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.6);
+    } catch(e) {}
+  }
+
+  function roundTo(n, place){
+    if(place==="هزارم") return Math.round(n*1000)/1000;
+    if(place==="صدم") return Math.round(n*100)/100;
+    if(place==="دهم") return Math.round(n*10)/10;
+    if(place==="یکان") return Math.round(n);
+    if(place==="دهگان") return Math.round(n/10)*10;
+    if(place==="صدگان") return Math.round(n/100)*100;
+    return n;
+  }
+  function truncTo(n, place){
+    if(place==="هزارم") return Math.trunc(n*1000)/1000;
+    if(place==="صدم") return Math.trunc(n*100)/100;
+    if(place==="دهم") return Math.trunc(n*10)/10;
+    if(place==="یکان") return Math.trunc(n);
+    if(place==="دهگان") return Math.trunc(n/10)*10;
+    if(place==="صدگان") return Math.trunc(n/100)*100;
+    return n;
+  }
+
+  function stepForPlace(place){
+    if(place==="هزارم") return 0.001;
+    if(place==="صدم") return 0.01;
+    if(place==="دهم") return 0.1;
+    if(place==="یکان") return 1;
+    if(place==="دهگان") return 10;
+    if(place==="صدگان") return 100;
+    return 1;
+  }
+
+  function buildOptions(correct, place){
+    const step = stepForPlace(place);
+    const pool = new Set();
+    const add = (v) => {
+      const clean = (Object.is(v, -0) ? 0 : v);
+      const fixed = (place==="هزارم") ? Number(clean.toFixed(3))
+                  : (place==="صدم") ? Number(clean.toFixed(2))
+                  : (place==="دهم") ? Number(clean.toFixed(1))
+                  : Number(clean.toFixed(0));
+      pool.add(fixed);
+    };
+    add(correct);
+    add(correct + step);
+    add(correct - step);
+    add(correct + 2*step);
+    while(pool.size < 4){
+      const k = rand(-3,3) || 1;
+      add(correct + k*step);
+    }
+    const arr = Array.from(pool).slice(0,4);
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  function genQuestion(kind, difficulty){
+    const places = ["هزارم","صدم","دهم","یکان","دهگان","صدگان"];
+    let place;
+    if(difficulty==="easy") place = choice(["یکان","دهگان"]);
+    else if(difficulty==="mid") place = choice(["دهم","صدم","یکان","دهگان"]);
+    else place = choice(["هزارم","صدم","دهم","صدگان"]);
+    if(!place) place = choice(places);
+    let n;
+    if(difficulty==="easy"){
+      if(place === "دهگان") n = rand(1, 9) * 10 + rand(1, 9);
+      else n = rand(1, 59) + rand(1, 9)/10;
+    } else if(difficulty==="mid"){
+      if(place==="دهگان") n = rand(10, 99) * 10 + rand(1, 9);
+      else if(place==="صدگان") n = rand(1, 9) * 100 + rand(1, 9) * 10 + rand(1, 9);
+      else if(place==="دهم") n = rand(10, 99) + rand(1, 9)/10 + rand(1, 9)/100;
+      else n = rand(1, 9) + rand(1, 9)/10 + rand(1, 9)/100 + rand(1, 9)/1000;
+    } else {
+      if(place==="صدگان") n = rand(1, 29) * 100 + rand(1, 9) * 10 + rand(1, 9);
+      else if(place==="دهگان") n = rand(15, 299) * 10 + rand(1, 9);
+      else if(place==="دهم") n = rand(1, 19) + rand(1, 9)/10 + rand(1, 9)/100;
+      else if(place==="صدم") n = rand(1, 9) + rand(1, 9)/10 + rand(1, 9)/100 + rand(1, 9)/1000;
+      else n = rand(1, 9) + rand(1, 9)/10 + rand(1, 9)/100 + rand(1, 9)/1000 + rand(1, 9)/10000;
+    }
+    const correct = (kind==="گرد کردن") ? roundTo(n, place) : truncTo(n, place);
+    let formattedNum;
+    if(place === "هزارم") formattedNum = n.toFixed(4);
+    else if(place === "صدم") formattedNum = n.toFixed(3);
+    else if(place === "دهم") formattedNum = n.toFixed(2);
+    else if(place === "یکان") formattedNum = n.toFixed(1);
+    else formattedNum = String(n);
+    const text = `تقریب عدد ${toFa(formattedNum)} تا مرتبه ${place} به روش ${kind} برابر با کدام است؟`;
+    const opts = buildOptions(correct, place).map(v => {
+      if(place==="هزارم") return toFa(Number(v).toFixed(3));
+      if(place==="صدم") return toFa(Number(v).toFixed(2));
+      if(place==="دهم") return toFa(Number(v).toFixed(1));
+      return toFa(String(v));
+    });
+    const answerText = (place==="هزارم") ? toFa(Number(correct).toFixed(3))
+                     : (place==="صدم") ? toFa(Number(correct).toFixed(2))
+                     : (place==="دهم") ? toFa(Number(correct).toFixed(1))
+                     : toFa(String(correct));
+    return { kind, difficulty, place, n, correct, text, opts, answerText };
+  }
+
+  function buildQuiz(difficulty){
+    const qs = [];
+    for(let round = 0; round < 5; round++) {
+      ["گرد کردن","قطع کردن"].forEach(kind => qs.push(genQuestion(kind, difficulty)));
+    }
+    for(let i=qs.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [qs[i],qs[j]] = [qs[j],qs[i]];
+    }
+    return qs.slice(0, 10);
+  }
+
+  const screens = {
+    s1: document.getElementById('s1'),
+    s2: document.getElementById('s2'),
+    s3: document.getElementById('s3'),
+    s4: document.getElementById('s4')
+  };
+
+  const el = {
+    mainApp: document.getElementById('mainApp'),
+    nameInput: document.getElementById('nameInput'),
+    btnReady: document.getElementById('btnReady'),
+    btnStart: document.getElementById('btnStart'),
+    btnRestart: document.getElementById('btnRestart'),
+    hudQ: document.getElementById('hudQ'),
+    hudTime: document.getElementById('hudTime'),
+    timeBar: document.getElementById('timeBar'),
+    qText: document.getElementById('qText'),
+    options: document.getElementById('options'),
+    feedback: document.getElementById('feedback'),
+    report: document.getElementById('report'),
+    burstLayer: document.getElementById('burstLayer'),
+    guideModal: document.getElementById('guideModal'),
+    btnOpenGuide: document.getElementById('btnOpenGuide'),
+    btnCloseGuide: document.getElementById('btnCloseGuide')
+  };
+
+  let studentName = '';
+  let quiz = [];
+  let idx = 0;
+  let correctCount = 0;
+  let wrongCount = 0;
+  let selectedLevel = 'easy';
+  const TOTAL = 20;
+  let t = TOTAL;
+  let timerId = null;
+  let locked = false;
+
+  function showScreen(id){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[id].classList.add('active');
+    if (id === 's1' || id === 's2' || id === 's4') el.mainApp.classList.add('center-aligned');
+    else el.mainApp.classList.remove('center-aligned');
+  }
+
+  function stopTimer(){ if(timerId) clearInterval(timerId); timerId = null; }
+
+  function startTimer(){
+    stopTimer();
+    updateTimerUI();
+    timerId = setInterval(() => {
+      t -= 1;
+      updateTimerUI();
+      if(t <= 0){ stopTimer(); onTimeUp(); }
+    }, 1000);
+  }
+
+  function updateTimerUI(){
+    el.hudTime.textContent = `زمان: ${toFa(t)}`;
+    el.timeBar.style.width = `${clamp((t/TOTAL)*100, 0, 100)}%`;
+  }
+
+  function setFeedback(text, isCorrect = false){
+    el.feedback.classList.remove('animate-pop');
+    void el.feedback.offsetWidth;
+
+    el.feedback.textContent = text;
+    if(text !== '') {
+      el.feedback.classList.add('animate-pop');
+      if(isCorrect) {
+        const colors = ['#e040fb', '#ff4081', '#9c27b0', '#f06292'];
+        el.feedback.style.color = choice(colors);
+      } else {
+        el.feedback.style.color = 'red';
+      }
+    } else {
+      el.feedback.style.color = 'transparent';
+    }
+  }
+
+  function spawnConfetti(baseColor) {
+    const count = 80;
+    const otherColors = ['#ffd166', '#ff8fab', '#cdb4db', '#90e0ef', '#a8e6cf'];
+    for (let i = 0; i < count; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.backgroundColor = Math.random() < 0.6 ? baseColor : choice(otherColors);
+      c.style.left = Math.random() * 100 + 'vw';
+      const duration = (Math.random() * 2 + 2) + 's';
+      c.style.setProperty('--dur', duration);
+      const size = rand(8, 14) + 'px';
+      c.style.width = size; c.style.height = size;
+      el.burstLayer.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }
+  }
+
+  function renderQuestion(){
+    const q = quiz[idx];
+    locked = false;
+    setFeedback('');
+    el.hudQ.textContent = `سؤال ${toFa(idx+1)} از ${toFa(10)}`;
+    el.qText.textContent = q.text;
+    el.options.innerHTML = '';
+    q.opts.forEach(optText => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      const bgColor = hslPastel();
+      b.style.background = bgColor;
+      b.textContent = optText;
+      b.addEventListener('click', () => chooseOption(optText, b, bgColor));
+      el.options.appendChild(b);
+    });
+  }
+
+  function onTimeUp(){
+    locked = true;
+    revealCorrectOption();
+    wrongCount++;
+    setFeedback('زمان تمام شد! ⏰');
+    setTimeout(() => {
+      idx++;
+      if(idx >= quiz.length) finish();
+      else { t = TOTAL; renderQuestion(); startTimer(); }
+    }, 3000);
+  }
+
+  function revealCorrectOption(){
+    const q = quiz[idx];
+    const optionButtons = el.options.querySelectorAll('.opt');
+    optionButtons.forEach(btn => {
+      if(btn.textContent.trim() === q.answerText.trim() || btn.textContent.includes(q.answerText)){
+        btn.textContent = q.answerText + " ✅";
+        btn.classList.add('correct-reveal');
+      }
+    });
+  }
+
+  function chooseOption(optText, btn, btnColor){
+    if(locked) return;
+    const q = quiz[idx];
+    if(optText === q.answerText){
+      locked = true;
+      correctCount++;
+      playClickSound();
+      playSuccessSound();
+      spawnConfetti(btnColor);
+      btn.textContent = q.answerText + " ✅";
+      btn.classList.add('correct-reveal');
+      const feedbacks = ['عالی بودی! 😍', 'آفرین قهرمان! ✨', 'خیلی باهوشی! 💖', 'احسنت به تو! 👏', 'درست گفتی! 🥳', 'فوق‌العاده‌ای! 🌸'];
+      setFeedback(choice(feedbacks), true);
+      setTimeout(() => {
+        idx++;
+        if(idx >= quiz.length) { stopTimer(); finish(); }
+        else { t = TOTAL; renderQuestion(); }
+      }, 1800);
+    } else {
+      locked = true;
+      wrongCount++;
+      playClickSound();
+      setFeedback('پاسخ نادرست بود ❌');
+      revealCorrectOption();
+      setTimeout(() => {
+        idx++;
+        if(idx >= quiz.length) { stopTimer(); finish(); }
+        else { t = TOTAL; renderQuestion(); locked = false; }
+      }, 3000);
+    }
+  }
+
+  function finish(){
+    stopTimer();
+    const total = quiz.length;
+    const percent = Math.round((correctCount/total)*100);
+    let feedbackMsg = "";
+    let levelText = selectedLevel === 'easy' ? 'آسان' : selectedLevel === 'mid' ? 'متوسط' : 'سخت';
+    if (percent >= 90) feedbackMsg = "🏆 فوق‌العاده و بی‌نظیر بودی! تو تسلط کاملی روی مبحث تقریب داری. بهت افتخار می‌کنم! 🥇";
+    else if (percent >= 60) feedbackMsg = "✨ عملکرد خوبی داشتی! با کمی دقت بیشتر و مرور مجدد روش‌های گرد کردن و قطع کردن می‌تونی به ۱۰۰٪ هم برسی. 👏";
+    else feedbackMsg = "📚 نیاز به تمرین بیشتری داری قهرمان! پیشنهاد می‌کنم دوباره درس‌نامه کوتاه بازی رو بخونی و یک بار دیگه شانس خودت رو امتحان کنی. تو حتماً می‌تونی! 💪";
+    el.report.innerHTML = `🌸 <b>${studentName} عزیز</b> 🌸<br>🎯 سطح بازی: <b>${levelText}</b><br>✅ تعداد پاسخ صحیح: <b>${toFa(correctCount)} از ${toFa(total)}</b><br>📊 درصد موفقیت شما: <b>${toFa(percent)}٪</b><br><br><span style="color:#1f4068; font-size:15px; display:inline-block; margin-top:8px;">${feedbackMsg}</span>`;
+    showScreen('s4');
+  }
+
+  document.querySelectorAll('.level-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      playClickSound();
+      document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
+      e.target.classList.add('selected');
+      selectedLevel = e.target.getAttribute('data-level');
+    });
+  });
+
+  el.btnOpenGuide.addEventListener('click', () => { playClickSound(); el.guideModal.classList.add('show'); });
+  el.btnCloseGuide.addEventListener('click', () => { playClickSound(); el.guideModal.classList.remove('show'); });
+  el.btnReady.addEventListener('click', () => {
+    playClickSound();
+    const v = (el.nameInput.value || '').trim();
+    if(!v){ alert('نامت را بنویس!'); el.nameInput.focus(); return; }
+    studentName = v;
+    showScreen('s2');
+  });
+  el.btnStart.addEventListener('click', () => {
+    playClickSound();
+    quiz = buildQuiz(selectedLevel);
+    idx = 0; correctCount = 0; wrongCount = 0; t = TOTAL;
+    showScreen('s3'); renderQuestion(); startTimer();
+  });
+  el.btnRestart.addEventListener('click', () => { playClickSound(); location.reload(); });
+  el.nameInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') el.btnReady.click(); });
+})();
+</script>
+</body>
+</html>
